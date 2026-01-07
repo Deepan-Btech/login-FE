@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="container fade-in">
+        <div class="card center-content">
+            <h1 class="gradient-text" id="welcomeMessage">Welcome!</h1>
+            
+            <div class="info-box">
+                <p class="label">Your Account Email</p>
+                <p class="value" id="userEmail">Loading...</p>
+            </div>
+            
+            <p class="subtitle">You have successfully logged in.</p>
+
+            <button onclick="logout()" class="button destructive full-width">Log Out</button>
+        </div>
+    </div>
+
+    <script>
+        // Check auth
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            window.location.href = 'login.html';
+        } else {
+            const user = JSON.parse(userStr);
+            // Assuming the backend returns { name, email, ... }
+            // If the backend returns user.name, we display it.
+            // Based on previous Next.js code, we expect 'user' object.
+            
+            if (user.name) {
+                document.getElementById('welcomeMessage').textContent = `Welcome, ${user.name}!`;
+            }
+            if (user.email) {
+                document.getElementById('userEmail').textContent = user.email;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

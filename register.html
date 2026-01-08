@@ -3,73 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Login System</title>
+    <title>Register - Todo List App</title>
+    <!-- We link our shared CSS file here -->
     <link rel="stylesheet" href="styles.css">
-    <!-- Using a CDN for icons -->
+    <!-- Icon library for the UI -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Axios for API calls -->
+    <!-- Axios library handles talking to our Backend Server -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
-    <div class="container fade-in">
-        <div class="card">
-            <div class="header">
-                <h2>Create an account</h2>
-                <p>Enter your details to register</p>
-            </div>
-            
-            <form id="registerForm" class="form">
-                <div class="form-group">
-                    <label for="name">Name</label>
-                    <input type="text" id="name" name="name" placeholder="John Doe">
-                    <span class="error" id="nameError"></span>
-                </div>
+    <div class="auth-page">
+        <!-- HEADER (Hidden by user preference) -->
+        <!-- <header class="auth-header"> ... </header> -->
 
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" placeholder="john@example.com">
-                    <span class="error" id="emailError"></span>
+        <main class="auth-main">
+            <!-- REGISTER CARD: A centered box for the form -->
+            <div class="auth-card">
+                <div class="auth-card-header">
+                    <h1>Create an account</h1>
+                    <p>Enter your details below to get started</p>
                 </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="password" name="password" placeholder="******">
-                        <button type="button" class="toggle-password" onclick="togglePassword()">
-                            <i data-lucide="eye" id="eyeIcon"></i>
-                        </button>
+                
+                <!-- 
+                  Beginners: The 'id="registerForm"' tells script.js what to 
+                  watch. When the "Register" button is clicked, script.js 
+                  will collect this data and send it to the server.
+                -->
+                <form id="registerForm" class="auth-form grid-layout" novalidate>
+                    
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" placeholder="e.g., Jane Doe" required>
+                        <!-- Area to show "Name too short" errors -->
+                        <label class="error" id="nameError" for="name"></label>
                     </div>
-                    <span class="error" id="passwordError"></span>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" placeholder="e.g., jane@example.com" required>
+                        <label class="error" id="emailError" for="email"></label>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="password">Password</label>
+                        <div class="password-wrapper">
+                            <!-- type="password" hides the text as dots by default -->
+                            <input type="password" id="password" name="password" placeholder="Create a password" required>
+                            <!-- Click this to show or hide the password using Javascript -->
+                            <button type="button" class="toggle-password" onclick="togglePassword()">
+                                <i data-lucide="eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                        <label class="error" id="passwordError" for="password"></label>
+                    </div>
+
+                    <!-- Additional details for the user profile -->
+                    <div class="form-group">
+                        <label for="dob">Date of Birth</label>
+                        <input type="date" id="dob" name="dob" required>
+                        <label class="error" id="dobError" for="dob"></label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" required>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <label class="error" id="genderError" for="gender"></label>
+                    </div>
+
+                    <!-- General area for server-side errors (like "Email Taken") -->
+                    <div id="globalError" class="global-error hidden full-width"></div>
+
+                    <!-- Click this to trigger the 'submit' event in script.js -->
+                    <button type="submit" class="auth-btn primary full-width" id="submitBtn">Register</button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>Already joined us? <a href="login.html">Sign in here</a></p>
                 </div>
-
-                <div class="form-group">
-                    <label for="dob">Date of Birth</label>
-                    <input type="date" id="dob" name="dob">
-                    <span class="error" id="dobError"></span>
-                </div>
-
-                <div class="form-group">
-                    <label for="gender">Gender</label>
-                    <select id="gender" name="gender">
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-
-                <div id="globalError" class="global-error hidden"></div>
-
-                <button type="submit" class="button primary full-width" id="submitBtn">Register</button>
-            </form>
-
-            <div class="footer">
-                <p>Already have an account? <a href="login.html">Sign in</a></p>
             </div>
-        </div>
+        </main>
     </div>
     
+    <!-- Link to the logic file that makes this form work -->
     <script src="script.js"></script>
     <script>
+        // Make sure all data-lucide icons are drawn
         lucide.createIcons();
     </script>
 </body>

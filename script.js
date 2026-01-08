@@ -1,6 +1,13 @@
+/**
+ * BACKEND API URL
+ * This is the address where our server is running.
+ * We send our registration and login data to this address.
+ */
 const API_URL = "https://login-be-n80f.onrender.com";
 
-// Helper function to check if an email is valid using a Regular Expression (Regex)
+/**
+ * HELPER: Email Validator
+ */
 const validateEmail = (email) => {
     return String(email)
         .toLowerCase()
@@ -9,45 +16,53 @@ const validateEmail = (email) => {
         );
 };
 
-// Function to show/hide the password when the eye icon is clicked
+/**
+ * This function handles showing and hiding the password text when 
+ * you click the eye icon in the login or register forms.
+ */
 function togglePassword() {
+    // 1. Find the password input field and the eye icon in the HTML
     const passwordInput = document.getElementById('password');
     const eyeIcon = document.getElementById('eyeIcon');
     
-    // Check if the current type is password
+    // 2. Check the current type of the input (is it hidden "password" or visible "text"?)
     if (passwordInput.type === 'password') {
-        // Change to text so the value is visible
+        // Change it to "text" so the user can see what they typed
         passwordInput.type = 'text';
-        // Change icon to 'eye-off' (crossed out eye)
+        // Change the icon to the "eye-off" version
         eyeIcon.setAttribute('data-lucide', 'eye-off');
     } else {
-        // Change back to password to hide the value
+        // Change it back to "password" to hide the dots/stars
         passwordInput.type = 'password';
-        // Change icon back to 'eye'
+        // Change the icon back to the normal "eye"
         eyeIcon.setAttribute('data-lucide', 'eye');
     }
-    // Refresh icons to apply the change
+    
+    // 3. Lucide needs to be told to re-draw the icons after we change them
     lucide.createIcons();
 }
 
-// === REGISTRATION PAGE LOGIC ===
-// We check if the register form exists on the current page
+/**
+
+ * This section only runs if the 'registerForm' exists on the page.
+ */
 const registerForm = document.getElementById('registerForm');
 if (registerForm) {
-    // Listen for the 'submit' event (when the user clicks Register)
+    // Listen for when the user clicks the "Register" button
     registerForm.addEventListener('submit', async (e) => {
-        // Prevent the default browser action (which reloads the page)
+        // Prevent the page from refreshing (the default behavior of forms)
         e.preventDefault();
         
-        // Reset previous error messages
+        // Clear any old error messages from previous attempts
         document.querySelectorAll('.error').forEach(el => el.textContent = '');
         document.getElementById('globalError').classList.add('hidden');
         
-        // Disable the button to prevent double-clicking
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitBtn').textContent = 'Creating account...';
+        // Show a "Loading" state on the button so the user knows something is happening
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating account...';
 
-        // Collect data from the input fields
+        // 1. Collect everything the user typed into the form
         const formData = {
             name: document.getElementById('name').value,
             email: document.getElementById('email').value,
@@ -56,113 +71,137 @@ if (registerForm) {
             gender: document.getElementById('gender').value
         };
 
-        // --- VALIDATION STEP ---
-        // Check if the data entered by the user is valid
+        // 2. Validation Check: Make sure the inputs make sense before sending to server
         let hasError = false;
         
         if (formData.name.length < 2) {
-            document.getElementById('nameError').textContent = "Name must be at least 2 characters";
+            document.getElementById('nameError').textContent = "Please enter your name";
             hasError = true;
         }
         if (!validateEmail(formData.email)) {
-            document.getElementById('emailError').textContent = "Invalid email address";
+            document.getElementById('emailError').textContent = "Please enter a valid email";
             hasError = true;
         }
         if (formData.password.length < 6) {
-            document.getElementById('passwordError').textContent = "Password must be at least 6 characters";
+            document.getElementById('passwordError').textContent = "Password must be 6+ characters";
             hasError = true;
         }
         if (!formData.dob) {
-            document.getElementById('dobError').textContent = "Invalid date";
+            document.getElementById('dobError').textContent = "Date of birth is required";
+            hasError = true;
+        }
+        if (!formData.gender) {
+            document.getElementById('genderError').textContent = "Please select a gender";
             hasError = true;
         }
 
-        // If there are errors, stop here and re-enable the button
+        // 3. Stop if there are errors: Turn the button back on so they can try again
         if (hasError) {
-            document.getElementById('submitBtn').disabled = false;
-            document.getElementById('submitBtn').textContent = 'Register';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Register';
             return;
         }
 
-        // --- API CALL STEP ---
-        // Send the data to the server
+        // 4. API Request: Actually send the data to our Backend Server
         try {
-            console.log("Sending data to:", API_URL);
-            // axios.post sends a POST request to the backend URL
-            const response = await axios.post(`${API_URL}/register`, formData);
-            
-            // If successful, redirect the user to the Login page with a success flag
+            await axios.post(`${API_URL}/register`, formData);
             window.location.href = 'login.html?registered=true';
         } catch (error) {
-            console.error(error);
-            // If there is an error (e.g., email already taken), show it to the user
-            const message = error.response?.data?.message || "Registration failed. Check console/network.";
-            document.getElementById('globalError').textContent = message;
-            document.getElementById('globalError').classList.remove('hidden');
+            const message = error.response?.data?.message || "Something went wrong. Try again.";
+            const globalError = document.getElementById('globalError');
+            globalError.textContent = message;
+            globalError.classList.remove('hidden');
         } finally {
-            // Always re-enable the button after the request finishes (success or fail)
-            document.getElementById('submitBtn').disabled = false;
-            document.getElementById('submitBtn').textContent = 'Register';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Register';
         }
+    });
+
+    // REAL-TIME ERROR CLEARING: 
+    // This removes the red error message immediately as the user starts typing
+    registerForm.querySelectorAll('input, select').forEach(element => {
+        element.addEventListener('input', (e) => {
+            const errorElement = document.getElementById(`${e.target.id}Error`);
+            if (errorElement) {
+                errorElement.textContent = '';
+            }
+        });
     });
 }
 
-// === LOGIN PAGE LOGIC ===
-// Check if the login form exists on the current page
+/**
+
+ * This section handles checking credentials and logging the user in.
+ */
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault(); // Stop page reload
+        e.preventDefault(); // Stop the page from reloading
         
-        // detailed cleanup of errors
+        // Clear old errors
         document.querySelectorAll('.error').forEach(el => el.textContent = '');
         document.getElementById('globalError').classList.add('hidden');
         
         // Show loading state
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitBtn').textContent = 'Signing in...';
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Signing in...';
 
-        // Get login credentials
-        const formData = {
+        const loginData = {
             email: document.getElementById('email').value,
             password: document.getElementById('password').value
         };
 
-        // Simple validation
+        // 1. Basic check before sending
         let hasError = false;
-        if (!validateEmail(formData.email)) {
-             document.getElementById('emailError').textContent = "Invalid email address";
-             hasError = true;
+        if (!validateEmail(loginData.email)) {
+            document.getElementById('emailError').textContent = "Please enter a valid email";
+            hasError = true;
         }
-        if (!formData.password) {
+        if (!loginData.password) {
             document.getElementById('passwordError').textContent = "Password is required";
             hasError = true;
         }
 
         if (hasError) {
-            document.getElementById('submitBtn').disabled = false;
-            document.getElementById('submitBtn').textContent = 'Sign In';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign In';
             return;
         }
 
-        // Send login request
+        // 2. Send login credentials to Server
         try {
-            const response = await axios.post(`${API_URL}/login`, formData);
+            const response = await axios.post(`${API_URL}/login`, loginData);
             
-            // If successful, the server sends back user data
-            // We store this data in the browser's LocalStorage so we can use it on the Dashboard
+            /**
+             * LOCAL STORAGE: 
+             * This is a small database inside your browser. 
+             * We save the user data here so the Dashboard knows WHO is logged in.
+             */
             localStorage.setItem('user', JSON.stringify(response.data.user));
             
-            // Redirect to the Dashboard
+            // Success! Go to the dashboard
             window.location.href = 'dashboard.html';
         } catch (error) {
-            console.error(error);
+            // Error! usually "Invalid credentials"
             const message = error.response?.data?.message || "Login failed";
             document.getElementById('globalError').textContent = message;
             document.getElementById('globalError').classList.remove('hidden');
         } finally {
-            document.getElementById('submitBtn').disabled = false;
-            document.getElementById('submitBtn').textContent = 'Sign In';
+            // Reset button
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign In';
         }
+    });
+
+    // REAL-TIME ERROR CLEARING: 
+    // This removes the red error message immediately as the user starts typing
+    loginForm.querySelectorAll('input').forEach(element => {
+        element.addEventListener('input', (e) => {
+            const errorElement = document.getElementById(`${e.target.id}Error`);
+            if (errorElement) {
+                errorElement.textContent = '';
+            }
+        });
     });
 }

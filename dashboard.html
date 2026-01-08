@@ -3,49 +3,420 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Dashboard - Todo List</title>
+    <!-- We link our CSS file here to apply styles -->
     <link rel="stylesheet" href="styles.css">
+    <!-- Lucide is a library for beautiful icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Axios is a library for making requests to our backend server -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
-    <div class="container fade-in">
-        <div class="card center-content">
-            <h1 class="gradient-text" id="welcomeMessage">Welcome!</h1>
+    <div class="app-container fade-in">
+        <!-- Main Area where the app lives -->
+        <main class="main-content">
             
-            <div class="info-box">
-                <p class="label">Your Account Email</p>
-                <p class="value" id="userEmail">Loading...</p>
+            <!-- TOP BAR: Contains Logo, Search, and User Logout -->
+            <div class="top-bar">
+                <div class="top-bar-left">
+                    <div class="app-logo">
+                        <div class="profile-avatar-top">
+                            <i data-lucide="user" style="width: 1.2rem; height: 1.2rem;"></i>
+                        </div>
+                        <span class="app-name" id="userNameDisplay">User</span>
+                    </div>
+
+                    <!-- SEARCH: Allows users to filter their tasks -->
+                    <div class="search-wrapper">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" placeholder="Search your tasks..." class="search-input" id="searchInput">
+                    </div>
+                </div>
+
+                <!-- LOGOUT: Removes user session and goes back to login -->
+                <div class="user-profile-top" onclick="logout()" title="Click to logout">
+                    <div class="profile-info-top">
+                        <p class="profile-action-top">Logout</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE HEADER: Title and Add Task button -->
+            <div class="page-header">
+                <h1 class="page-title">TODO LIST</h1>
+                <button class="add-note-btn" id="addNoteBtn">
+                    <i data-lucide="plus"></i>
+                    <span>New Task</span>
+                </button>
+            </div>
+
+            <!-- TASKS GRID: This is where our colorful cards will appear -->
+            <div class="notes-grid" id="notesGrid">
+                <!-- Our Javascript will inject task cards here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: A pop-up window for adding a new task -->
+    <div class="modal" id="noteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">New Task</h2>
+                <button class="modal-close" onclick="closeModal()">
+                    <i data-lucide="x"></i>
+                </button>
             </div>
             
-            <p class="subtitle">You have successfully logged in.</p>
-
-            <button onclick="logout()" class="button destructive full-width">Log Out</button>
+            <form id="todoForm" class="note-form" novalidate>
+                <!-- User types the task content here -->
+                <input 
+                    type="text" 
+                    id="todoInput" 
+                    placeholder="What needs to be done?" 
+                    autocomplete="off"
+                    class="note-input"
+                    required>
+                <label class="error" id="todoError" for="todoInput"></label>
+                
+                <!-- COLOR PICKER: Let users choose a background color -->
+                <div class="color-picker">
+                    <label>Choose a color category:</label>
+                    <div class="color-options">
+                        <input type="radio" name="noteColor" value="yellow" id="color-yellow" checked>
+                        <label for="color-yellow" class="color-option color-yellow"></label>
+                        
+                        <input type="radio" name="noteColor" value="coral" id="color-coral">
+                        <label for="color-coral" class="color-option color-coral"></label>
+                        
+                        <input type="radio" name="noteColor" value="green" id="color-green">
+                        <label for="color-green" class="color-option color-green"></label>
+                        
+                        <input type="radio" name="noteColor" value="purple" id="color-purple">
+                        <label for="color-purple" class="color-option color-purple"></label>
+                        
+                        <input type="radio" name="noteColor" value="blue" id="color-blue">
+                        <label for="color-blue" class="color-option color-blue"></label>
+                        
+                        <input type="radio" name="noteColor" value="pink" id="color-pink">
+                        <label for="color-pink" class="color-option color-pink"></label>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Save Task</button>
+            </form>
         </div>
     </div>
 
+    <!-- script.js contains our API_URL and common functions -->
+    <script src="script.js"></script>
+
     <script>
-        // Check auth
+        /**
+         * 1. LOGIN CHECK
+         * Beginners: When the page loads, we check if the user is actually logged in.
+         * If they aren't, we send them back to the login page.
+         */
         const userStr = localStorage.getItem('user');
+        let currentUser = null;
+
         if (!userStr) {
             window.location.href = 'login.html';
         } else {
-            const user = JSON.parse(userStr);
-            // Assuming the backend returns { name, email, ... }
-            // If the backend returns user.name, we display it.
-            // Based on previous Next.js code, we expect 'user' object.
-            
-            if (user.name) {
-                document.getElementById('welcomeMessage').textContent = `Welcome, ${user.name}!`;
-            }
-            if (user.email) {
-                document.getElementById('userEmail').textContent = user.email;
+            currentUser = JSON.parse(userStr);
+            // Display the user's name in the top bar
+            if (currentUser.name) {
+                document.getElementById('userNameDisplay').textContent = currentUser.name;
             }
         }
 
+        /**
+         * 2. LOGOUT FUNCTION
+         * Removes the user from LocalStorage and sends them away.
+         */
         function logout() {
             localStorage.removeItem('user');
-            window.location.href = 'index.html';
+            window.location.href = 'login.html';
         }
+
+        // --- GLOBAL VARIABLES ---
+        const modal = document.getElementById('noteModal');
+        const addNoteBtn = document.getElementById('addNoteBtn');
+        const todoForm = document.getElementById('todoForm');
+        const todoInput = document.getElementById('todoInput');
+        const notesGrid = document.getElementById('notesGrid');
+
+        // This key is used to save tasks in LocalStorage just for THIS specific user
+        const STORAGE_KEY = currentUser ? `todos_${currentUser.email}` : 'todos_guest';
+        
+        // Load any tasks we've saved in the past from the browser memory
+        let todos = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        // Predefined colors for our task cards
+        const colorSchemes = {
+            yellow: { bg: '#fef3c7', text: '#78350f', dot: '#f59e0b' },
+            coral: { bg: '#fed7d7', text: '#7c2d12', dot: '#dc2626' },
+            green: { bg: '#d1fae5', text: '#064e3b', dot: '#10b981' },
+            purple: { bg: '#e9d5ff', text: '#581c87', dot: '#a855f7' },
+            blue: { bg: '#dbeafe', text: '#1e3a8a', dot: '#3b82f6' },
+            pink: { bg: '#fce7f3', text: '#831843', dot: '#ec4899' }
+        };
+
+        /**
+         * 3. MODAL CONTROLS
+         * Logic for opening and closing the "New Task" pop-up.
+         */
+        function openModal() {
+            modal.style.display = 'flex';
+            todoInput.value = '';
+            todoInput.focus();
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        addNoteBtn.addEventListener('click', openModal);
+
+        // If the user clicks outside the white box, close it
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        /**
+         * 4. FETCHING DATA (READ)
+         * We ask the backend server for all tasks saved for this user ID.
+         */
+        async function fetchTodos() {
+            if (!currentUser) return;
+            
+            const userId = currentUser._id || currentUser.id;
+            if (!userId) return;
+
+            try {
+                // GET request: "Hey server, please give me todos for this user"
+                const response = await axios.get(`${API_URL}/todos/${userId}`);
+
+                if (Array.isArray(response.data)) {
+                    // Normalize the data (ensure every task has the properties we need)
+                    todos = response.data.map(t => ({
+                        ...t,
+                        text: t.title || t.text || 'Untitled Task',
+                        completed: t.isCompleted === true || t.completed === true,
+                        _id: t._id || t.id,
+                        color: t.color || 'yellow'
+                    }));
+                    
+                    // Save to local cache so user sees them even if offline
+                    saveTodos(); 
+                }
+            } catch (error) {
+                console.error("Fetch failed:", error);
+            }
+        }
+
+        /**
+         * 5. PERSISTENCE
+         * Saves the current 'todos' array into the browser memory (LocalStorage)
+         * and then re-draws the UI.
+         */
+        function saveTodos() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+            renderTodos();
+        }
+
+        /**
+         * 6. RENDERING (DISPLAY)
+         * This function loops through every task and creates HTML cards for them.
+         */
+        function renderTodos() {
+            notesGrid.innerHTML = '';
+            
+            // Show a message if no tasks exist
+            if (todos.length === 0) {
+                notesGrid.innerHTML = `
+                    <div class="empty-state-grid">
+                        <i data-lucide="inbox" style="width: 4rem; height: 4rem;"></i>
+                        <p>No tasks yet. Click "New Task" to get started!</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            // Loop through each todo object
+            todos.forEach((todo, index) => {
+                const card = document.createElement('div');
+                const colorScheme = colorSchemes[todo.color || 'yellow'];
+                
+                // Set the style and class based on completion
+                card.className = `note-card ${todo.completed ? 'completed' : ''}`;
+                card.style.backgroundColor = colorScheme.bg;
+                card.style.color = colorScheme.text;
+                
+                const displayText = todo.title || todo.text;
+                const createdDate = todo.createdAt ? new Date(todo.createdAt).toLocaleDateString() : '';
+
+                // Generate the HTML for the card
+                card.innerHTML = `
+                    <div class="note-card-header">
+                        <div class="note-dot" style="background-color: ${colorScheme.dot};"></div>
+                        <button class="note-delete-btn" onclick="deleteTodo(${index})" title="Delete task">
+                            <i data-lucide="trash-2" style="width: 1rem; height: 1rem;"></i>
+                        </button>
+                    </div>
+                    <div class="note-card-content">
+                        <p class="note-card-text">${escapeHtml(displayText)}</p>
+                    </div>
+                    <div class="note-card-footer">
+                        <span class="note-card-date">${createdDate}</span>
+                        <button class="note-complete-btn ${todo.completed ? 'completed' : ''}" 
+                                onclick="toggleTodo(${index})" 
+                                ${todo.completed ? 'disabled' : ''}
+                                title="${todo.completed ? 'Task Finished' : 'Complete Task'}">
+                            <i data-lucide="${todo.completed ? 'check-circle' : 'circle'}" 
+                               style="width: 1.2rem; height: 1.2rem;"></i>
+                        </button>
+                    </div>
+                `;
+                notesGrid.appendChild(card);
+            });
+            
+            // Re-render icons after adding them to the page
+            lucide.createIcons();
+        }
+
+        /**
+         * 7. ADDING A TASK (CREATE)
+         * Sends a new task to the server.
+         */
+        async function addTodo(text, color) {
+            if (!text.trim()) return;
+
+            const userId = currentUser._id || currentUser.id;
+            const payload = { userId, title: text.trim() };
+
+            // Optimistic Update: Add to UI immediately before the server replies
+            const newTodoLocal = {
+                title: text.trim(),
+                text: text.trim(),
+                completed: false,
+                createdAt: new Date().toISOString(),
+                color: color || 'yellow'
+            };
+            
+            todos.unshift(newTodoLocal); // Put new task at the top
+            saveTodos(); 
+
+            try {
+                // Send to backend
+                const response = await axios.post(`${API_URL}/todos`, payload);
+                if (response.data) {
+                    // Update our local task with the real ID from the server
+                    Object.assign(newTodoLocal, response.data);
+                    newTodoLocal.color = color || 'yellow';
+                    saveTodos();
+                }
+            } catch (error) {
+                console.error("Save failed:", error);
+            }
+        }
+
+        /**
+         * 8. COMPLETING A TASK (UPDATE)
+         * Sends an update to the server to mark a task as finished.
+         */
+        async function toggleTodo(index) {
+            const todo = todos[index];
+            if (todo.completed) return; // Prevent "un-doing"
+
+            // Update UI
+            todo.completed = true;
+            saveTodos(); 
+
+            const todoId = todo._id || todo.id;
+            if (!todoId) return;
+
+            try {
+                // PUT request: "Hey server, update this task ID to isCompleted = true"
+                await axios.put(`${API_URL}/todos/${todoId}`, { isCompleted: true });
+            } catch (error) {
+                console.error("Update failed:", error);
+            }
+        }
+
+        /**
+         * 9. DELETING A TASK (DELETE)
+         * Removes a task from both UI and Server.
+         */
+        async function deleteTodo(index) {
+            const todo = todos[index];
+            
+            // Remove from local array
+            todos.splice(index, 1);
+            saveTodos();
+
+            const todoId = todo._id || todo.id;
+            if (!todoId) return;
+
+            try {
+                // DELETE request: "Hey server, throw this task away"
+                await axios.delete(`${API_URL}/todos/${todoId}`);
+            } catch (error) {
+                console.error("Delete failed:", error);
+            }
+        }
+
+        /**
+         * 10. SEARCH LOGIC
+         * Filters task cards as the user types in the search bar.
+         */
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.note-card');
+            
+            cards.forEach(card => {
+                const cardText = card.querySelector('.note-card-text').textContent.toLowerCase();
+                // Simple toggle: if text contains search term, show it. Otherwise, hide it.
+                if (cardText.includes(searchTerm)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // HELPER: Security function to prevent "XSS" (bad scripts) in user input
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // --- INITIALIZATION ---
+        // When the page first loads, perform these steps:
+        todoForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Clear old error
+            document.getElementById('todoError').textContent = '';
+            
+            if (!todoInput.value.trim()) {
+                document.getElementById('todoError').textContent = 'Please enter a task description';
+                return;
+            }
+
+            const selectedColor = document.querySelector('input[name="noteColor"]:checked').value;
+            addTodo(todoInput.value, selectedColor);
+            closeModal();
+        });
+
+        // REAL-TIME ERROR CLEARING
+        todoInput.addEventListener('input', () => {
+            document.getElementById('todoError').textContent = '';
+        });
+
+        renderTodos(); // Show cached tasks
+        fetchTodos();  // Fetch fresh tasks from server
     </script>
 </body>
 </html>

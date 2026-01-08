@@ -1,49 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Basic Metadata -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login System - Home</title>
-    <!-- Link to our external CSS file for styling -->
+    <title>Welcome - Todo List App</title>
+    <!-- Basic styles for the landing page -->
     <link rel="stylesheet" href="styles.css">
+    <!-- Icon library -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <!-- Scripts for Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Top Right GitHub Button -->
-    <div class="github-container">
-        <button class="github-btn">
-            <i data-lucide="github" style="width: 1.2rem; height: 1.2rem;"></i>
-            <span>Source Code</span>
-        </button>
-        <!-- Dropdown Menu -->
-        <div class="github-dropdown">
-            <a href="https://github.com/Deepan-Btech/login-FE" target="_blank">Frontend Repo</a>
-            <a href="https://github.com/EswarCodeX/Login-BE" target="_blank">Backend Repo</a>
-        </div>
-    </div>
-
     <!-- 
-       Main Container for "Fade In" animation
-       "container" restricts width like a column
+      LANDING PAGE: 
+      Beginners: This is the first page users see. 
+      It introduces the app and provides links to Login and Register. 
     -->
-    <div class="container fade-in">
-        <div class="card center-content">
-            <h1 class="gradient-text">Welcome</h1>
-            <p class="subtitle">Experience a seamless authentication flow with our modern interface.</p>
-            
-            <div class="button-group">
-                <a href="register.html" class="button primary">Get Started</a>
-                <a href="login.html" class="button outline">Sign In</a>
+    <div class="landing-page">
+        
+        <!-- HEADER: Navigation and Logo -->
+        <header class="landing-header">
+            <div class="landing-header-content">
+                <div class="app-logo">
+                    <div class="logo-circle">
+                        <i data-lucide="check-square" style="width: 1.5rem; height: 1.5rem;"></i>
+                    </div>
+                    <span class="app-name">Todo List</span>
+                </div>
+                <div class="header-buttons">
+                    <!-- GITHUB LINKS -->
+                    <div class="github-container">
+                        <button class="github-btn" id="githubBtn">
+                            <i data-lucide="github" style="width: 1.2rem; height: 1.2rem;"></i>
+                            <span>Source Code</span>
+                        </button>
+                        <div class="github-dropdown" id="githubDropdown">
+                            <a href="https://github.com/Deepan-Btech/login-FE" target="_blank">Frontend Repo</a>
+                            <a href="https://github.com/EswarCodeX/Login-BE" target="_blank">Backend Repo</a>
+                        </div>
+                    </div>
+                    
+                    <a href="login.html" class="landing-btn secondary">Login</a>
+                    <a href="register.html" class="landing-btn primary">Register</a>
+                </div>
             </div>
-        </div>
+        </header>
+
+        <!-- HERO SECTION: The main eye-catching part of the page -->
+        <main class="landing-hero">
+            
+
+            <!-- MAIN CONTENT: Headline and Call-to-Action buttons -->
+            <div class="hero-content">
+                <h1 class="hero-title">Organize Your Life,<br>One Task at a Time</h1>
+                <p class="hero-subtitle">A beautiful and simple todo app to help you stay productive and organized. Create colorful notes, track your progress, and never miss a task.</p>
+                
+                <div class="hero-buttons">
+                    <a href="register.html" class="landing-btn primary large">
+                        <i data-lucide="rocket"></i>
+                        <span>Register</span>
+                    </a>
+                    <a href="login.html" class="landing-btn secondary large">
+                        <i data-lucide="log-in"></i>
+                        <span>Sign In</span>
+                    </a>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <!-- Initialize Icons -->
+    <!-- PAGE LOGIC -->
     <script>
+        // Draw the icons
         lucide.createIcons();
+
+        // CONTROL: GitHub Dropdown Toggle
+        const githubBtn = document.getElementById('githubBtn');
+        const githubDropdown = document.getElementById('githubDropdown');
+
+        /**
+         * Beginners: 'addEventListener' waits for a specific action (like a 'click').
+         * When clicked, we 'toggle' (add or remove) the 'show' class.
+         */
+        githubBtn.addEventListener('click', (e) => {
+            // Stop the click from traveling up to the document (avoiding instant closing)
+            e.stopPropagation();
+            githubDropdown.classList.toggle('show');
+        });
+
+        // Close the dropdown if the user clicks anywhere else on the screen
+        document.addEventListener('click', (e) => {
+            // If the click was NOT on the button or the menu...
+            if (!githubBtn.contains(e.target) && !githubDropdown.contains(e.target)) {
+                // ...remove the visible class
+                githubDropdown.classList.remove('show');
+            }
+        });
     </script>
 </body>
 </html>
